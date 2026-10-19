@@ -1,0 +1,281 @@
+{
+  "name": "bot-image-generator",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -976,
+        -464
+      ],
+      "id": "ceee74a0-7eff-4d05-bb37-b13cec361c14",
+      "name": "Telegram Trigger",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "bot_imag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "insta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d1e98251-75db-447f-8ca7-24dc426af489"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "insta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d4358dc9-8929-4cc4-8580-0d460858f2fd",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "fb",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "fb"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "867e9b9d-4132-41d2-9cb9-893b8810689c",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "help"
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -432
+      ],
+      "id": "c95c2ae8-3cea-4821-b185-3776faf0c219",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.message?.text || '';\n\n// варіанти написання: латиниця, українська «і», російська «и»\nconst instaPattern = 'insta|інста|инста';\nconst fbPattern = 'fb|фб';\n\n// \"не літера й не цифра\" з обох боків = окреме слово (працює і для кирилиці)\nconst wrap = (p) => `(?<![\\\\p{L}\\\\p{N}])(${p})(?![\\\\p{L}\\\\p{N}])`;\n\nconst instaRe = new RegExp(wrap(instaPattern), 'iu');\nconst fbRe = new RegExp(wrap(fbPattern), 'iu');\nconst stripRe = new RegExp(wrap(`${instaPattern}|${fbPattern}`), 'giu');\n\nlet route = 'help';\nlet size = null;\n\nif (instaRe.test(text)) {\n  route = 'insta';\n  size = '1024x1536';\n} else if (fbRe.test(text)) {\n  route = 'fb';\n  size = '1536x1024';\n}\n\nconst prompt = text.replace(stripRe, '').trim();\n\nif (route !== 'help' && !prompt) {\n  route = 'help';\n  size = null;\n}\n\nreturn {\n  json: { route, size, prompt, chatId: $json.message.chat.id }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        -432
+      ],
+      "id": "103f86aa-6efd-4f17-8cde-f91ae40db223",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=Привіт! Я генерую картинки для соцмереж 🎨  Напиши команду і опис того, що намалювати:  - insta + опис → вертикальне зображення для Instagram - fb + опис → горизонтальний банер для Facebook  Приклади: insta кава в мінімалізмі fb банер про CRM  Команду без опису я не прийму, тож не забудь описати картинку.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -256
+      ],
+      "id": "8a858444-8d78-4b08-ab3e-315bb6035c3c",
+      "name": "Send a text message",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "bot_imag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        -416
+      ],
+      "id": "f1813e09-d003-4a12-90d5-196c52f0297b",
+      "name": "Send a photo message",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "bot_imag"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-image-2.5-flare",
+          "mode": "list"
+        },
+        "prompt": "={{ $('Code in JavaScript').item.json.prompt }}",
+        "options": {
+          "size": "={{ $('Code in JavaScript').item.json.size }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -48,
+        -480
+      ],
+      "id": "763b8368-132b-4a6d-9739-c912cc8b1d72",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "REDACTED",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c6055434-888d-42e4-8aaf-50171f123ad8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REDACTED"
+  },
+  "nodeGroups": [],
+  "id": "REDACTED",
+  "tags": []
+}

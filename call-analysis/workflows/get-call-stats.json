@@ -1,0 +1,113 @@
+{
+  "name": "Get call stats",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "startDate"
+            },
+            {
+              "name": "endDate"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3b11101f-d7a3-4d9e-a5d2-8b81059f1d67",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list",
+          "cachedResultName": "call_results",
+          "cachedResultUrl": "REDACTED"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "processed_at",
+              "condition": "gte",
+              "keyValue": "={{ $json.startDate }}"
+            },
+            {
+              "keyName": "processed_at",
+              "condition": "lt",
+              "keyValue": "={{ DateTime.fromISO($json.endDate).plus({ days: 1 }).toISO() }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "78bf27b7-ba12-4e01-883d-fa785233dea8",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all()\n  .map(item => item.json)\n  .filter(row => row.sentiment); // відсіює порожній елемент, якщо дзвінків за період немає\n\nconst totalCalls = rows.length;\nconst negativeCalls = rows.filter(row => row.sentiment === 'negative').length;\nconst negativeCallPercent = totalCalls === 0\n  ? 0\n  : Math.round((negativeCalls / totalCalls) * 100);\n\nreturn [{\n  json: {\n    totalCalls,\n    negativeCalls,\n    negativeCallPercent: negativeCallPercent + '%'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ec2a4bb4-8c1e-43c2-a489-6bd516566ec0",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "40da0521-e16d-4708-9e02-ea16b5264b3a",
+  "meta": {
+    "instanceId": "REDACTED"
+  },
+  "nodeGroups": [],
+  "id": "REDACTED",
+  "tags": []
+}
