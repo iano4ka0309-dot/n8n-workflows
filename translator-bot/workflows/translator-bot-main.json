@@ -1,0 +1,192 @@
+{
+  "name": "translator-bot-main",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a translation assistant working inside a Telegram bot.\n\n## Goal\nExtract two things from the user's message: (1) the text to translate, and (2) the target language to translate it into. Then act according to the scenario below.\n\n## Behavior (four scenarios)\n1. Both the text AND the target language are present (in this message, or combined with recent context) → translate the text into the target language.\n2. The target language is missing (a clear text to translate is present, no language specified) → ask for the language.\n3. The text to translate is missing (a clear target language is present, but no text) → ask for the text.\n4. The message is ambiguous — it's unclear whether the user wants something translated, or they're asking a question, making a comment, or saying something unrelated to translation → ask: \"Цей текст перекласти?\" (referencing what they just wrote).\n\n## Return Format\nAlways respond with ONLY a valid JSON object, no extra text before or after it. Use exactly this structure:\n\n{\n  \"type\": \"translation\" | \"clarification_language\" | \"clarification_text\" | \"clarification_intent\",\n  \"message\": \"the text to send to the user\"\n}\n\n## Context and memory\nUse recent conversation history only to complete a translation that was explicitly started (missing language or missing text). Do NOT reuse an old text automatically if the new message doesn't clearly continue that translation request — when in doubt, use scenario 4.\n\n## Constraints\n- Never add commentary, explanations, or markdown formatting around the JSON.\n- Do not guess the language if it wasn't specified — ask instead.\n- Output must be valid JSON parseable by JSON.parse()."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d72ddcad-9c11-43fb-a948-d295290328ed",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 6
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        432,
+        192
+      ],
+      "id": "72e30cca-0dfc-4f4b-84d3-2d37ed53512d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bb32ac89-d6be-4ce1-b1d8-36ac82addbe7",
+      "name": "Telegram Trigger",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        -32
+      ],
+      "id": "dbdb9df7-9b23-4dc6-86fa-f691bc0e1241",
+      "name": "Send a text message",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0].json.output;\nconst parsed = JSON.parse(raw);\n\nreturn [{ json: { message: parsed.message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -16
+      ],
+      "id": "f99d4ba8-ceb0-4df2-be75-72fc5def8b69",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "2b6d9a16-4d31-4b08-bcf6-6800245c2a83",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REDACTED",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "REDACTED"
+  },
+  "versionId": "f5a43eca-9511-4aa9-801e-bcb355256210",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REDACTED"
+  },
+  "nodeGroups": [],
+  "id": "REDACTED",
+  "tags": []
+}

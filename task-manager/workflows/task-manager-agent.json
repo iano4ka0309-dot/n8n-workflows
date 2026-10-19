@@ -1,0 +1,305 @@
+{
+  "name": "task-manager-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -272,
+        -32
+      ],
+      "id": "b1047d6e-cb15-4501-ac0e-c17d2fcb7827",
+      "name": "Telegram Trigger",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "home_tASK"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Ти помічник власника кондитерської. Керуєш списком задач через три інструменти. Відповідай українською, коротко й дружньо.\n\nІНСТРУМЕНТИ:\n1. task-manager-list-tasks: повертає всі НЕВИКОНАНІ задачі разом з їхніми id. Викликай, коли користувач питає, які є задачі, що на сьогодні, що лишилось зробити.\n2. task-manager-add-task: додає нову задачу. Параметр task_description це текст задачі. Викликай, коли користувач просить додати, записати, не забути щось.\n3. task-manager-complete-task: позначає задачу виконаною. Параметр id це числовий id задачі. Викликай, коли користувач каже, що щось зроблено, куплено, замовлено, і просить позначити.\n\nЯК ПОЗНАЧИТИ ВИКОНАНОЮ:\nКористувач називає задачу словами, а не id. Тому спершу викличи task-manager-list-tasks, знайди в результаті задачу, що за змістом збігається з сказаним, і візьми її id. Потім викличи task-manager-complete-task з цим id. Ніколи не вигадуй id.\n\nПРАВИЛА:\n- Якщо підходять кілька задач, перелічи їх і запитай, яку саме позначити.\n- Якщо відповідної задачі немає в списку, скажи про це і не викликай complete-task.\n- Після кожної дії підтверди результат одним реченням.\n- Якщо повідомлення не стосується задач, ввічливо поясни, що ти керуєш лише списком задач."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "567ea6fe-3615-4a94-afb2-e7f2747df338",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "cohere/north-mini-code:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        112
+      ],
+      "id": "9fc2d372-0f26-443b-a8be-e8c2c93ae333",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REDACTED",
+          "name": "OpenRouter account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Повертає список усіх НЕВИКОНАНИХ задач з їхніми id та текстом. Викликай, коли користувач питає, які є задачі, що лишилось зробити, що на сьогодні. Також викликай перед позначенням задачі виконаною, щоб дізнатися її id. Параметри не потрібні.",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REDACTED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        48
+      ],
+      "id": "6167da59-7d30-44b2-a0d7-1a391d4f8f46",
+      "name": "Call 'task-manager-list-tasks'"
+    },
+    {
+      "parameters": {
+        "description": "Додає нову задачу до списку. Викликай, коли користувач просить додати, записати або не забути щось зробити. У параметр task_description передай короткий текст задачі своїми словами користувача, без слів «додай задачу».",
+        "workflowId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list",
+          "cachedResultUrl": "REDACTED",
+          "cachedResultName": "task-manager-add-task"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task_description', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "task_description"
+          ],
+          "schema": [
+            {
+              "id": "task_description",
+              "displayName": "task_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        160
+      ],
+      "id": "deef7cd3-ddfe-4a9b-85c8-0f1db3631ee5",
+      "name": "Call 'task-manager-add-task'"
+    },
+    {
+      "parameters": {
+        "description": "Позначає задачу виконаною. Викликай, коли користувач каже, що щось зроблено, куплено чи замовлено, і просить позначити. У параметр id передай числовий id задачі, отриманий з task-manager-list-tasks. Ніколи не вигадуй id.",
+        "workflowId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list",
+          "cachedResultUrl": "REDACTED",
+          "cachedResultName": "task-manager-complete-task"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('id', ``, 'number') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        176
+      ],
+      "id": "937b6600-be29-49aa-a663-aa788412a3e0",
+      "name": "Call 'task-manager-complete-task'"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        -112
+      ],
+      "id": "c7e9a836-15ae-41d9-ac58-c8ab8f23dc5e",
+      "name": "Send a text message",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "home_tASK"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        192
+      ],
+      "id": "b34ae2b8-90a5-48a1-92ba-34d069eacf1e",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'task-manager-list-tasks'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'task-manager-add-task'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'task-manager-complete-task'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ca60fa00-e93f-47f6-b7d0-c436d8fab36c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REDACTED"
+  },
+  "nodeGroups": [],
+  "id": "REDACTED",
+  "tags": []
+}
