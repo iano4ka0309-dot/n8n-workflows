@@ -11,6 +11,7 @@ A collection of automation projects built with n8n: Telegram bots, Gmail, Google
 | [cake-order-automation](cake-order-automation/) | Emails about cakes → AI extracts the order → Google Docs proposal → reply with a link | n8n, Gmail, LLM, Google Drive, Google Docs |
 | [task-manager](task-manager/) | Telegram AI agent that manages a to-do list through three sub-workflow tools | n8n, Telegram, LLM, Data Tables |
 | [translator-bot](translator-bot/) | Telegram translator that asks clarifying questions, with a separate error workflow | n8n, Telegram, LLM |
+| [lead-form-handler](lead-form-handler/) | Wix landing form → Google Sheets row + Telegram notification for every new lead | n8n, Wix, Webhook, Google Sheets, Telegram |
 
 Each folder contains a README, the exported workflows in `workflows/`, and screenshots where available.
 

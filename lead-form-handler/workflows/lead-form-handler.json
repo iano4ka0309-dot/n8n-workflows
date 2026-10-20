@@ -1,0 +1,176 @@
+{
+  "name": "lead-form-handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "REDACTED",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "afb0b936-7391-4a01-a83f-8fdb1e96bdc3",
+      "name": "Webhook",
+      "webhookId": "REDACTED"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "REDACTED"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "REDACTED"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date/time": "={{ DateTime.fromISO($json.body.data.submissionTime).setZone('Europe/Kiev').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "name": "={{ $json.body.data.submissions.find(s => s.label === 'Name')?.value }}",
+            "e-mail": "={{ $json.body.data.submissions.find(s => s.label === 'Email')?.value ?? '' }}",
+            "phone": "={{ $json.body.data.submissions.find(s => s.label === 'Phone')?.value }}",
+            "comment": "={{ $json.body.data.submissions.find(s => s.label === 'Message')?.value ?? '' }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date/time",
+              "displayName": "date/time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "comment",
+              "displayName": "comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f1a9a0a6-c28a-484c-a11a-eecd503ceb61",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REDACTED",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🔔 Нова заявка з сайту  👤 Ім'я: {{ $('Webhook').item.json.body.data.submissions.find(s => s.label === 'Name')?.value ?? '—' }} 📞 Телефон: {{ $('Webhook').item.json.body.data.submissions.find(s => s.label === 'Phone')?.value ?? '—' }} ✉️ Пошта: {{ $('Webhook').item.json.body.data.submissions.find(s => s.label === 'Email')?.value ?? '—' }} 💬 Коментар: {{ $('Webhook').item.json.body.data.submissions.find(s => s.label === 'Message')?.value || '—' }} 🕒 Час: {{ DateTime.fromISO($('Webhook').item.json.body.data.submissionTime).setZone('Europe/Kiev').toFormat('yyyy-MM-dd HH:mm') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "3e72fa36-8bea-4cb8-ba75-b0d240240f5e",
+      "name": "Send a text message",
+      "webhookId": "REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "REDACTED",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "REDACTED",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
